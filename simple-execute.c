@@ -6,7 +6,7 @@
 #include <unistd.h>
 // YIJian 1155157207 CSCI3150 Assignment 1
 // I am in a group with Juluan SHI
-// Discussed with some friends about the assignment
+// Discussed ideas with some friends about the assignment
 
 typedef struct command{
 	char **argv;
@@ -16,26 +16,24 @@ typedef struct command{
 void spawn_command(int in, int out, struct command *cmd){
 	pid_t child_pid;
 
-	if((child_pid = fork()) < 0){
+	if((child_pid = fork()) < 0){//here is the error
 		perror("fork() error \n");
 	}
 	
 	if (child_pid == 0 ){
-
-		if (in != STDIN_FILENO){
-			// should be replaced with dup2; same for the following
+		if (in != STDIN_FILENO){//here we need to check if the input is the same as the standard input
 			close(STDIN_FILENO);
-			dup(in);
+			dup(in);//
 			close(in);
 		}
 
-		if (out != STDOUT_FILENO){
+		if (out != STDOUT_FILENO){//here we need to check if the output is the same as the standard output
 			close(STDOUT_FILENO);
 			dup(out);
 			close(out);
 		}
 
-		if (execvp(cmd->argv[0], cmd->argv) < 0){
+		if (execvp(cmd->argv[0], cmd->argv) < 0){//here we need to check if the command is valid
 			perror("execvp() error");
 			exit(1);
 		}
@@ -58,7 +56,7 @@ int shell_execute(char ** args, int argc)
 
 	while(head < argc - 1)
 	{
-		while(tail < argc -1 && strcmp(args[tail], "|") != 0)
+		while(tail < argc -1 && strcmp(args[tail], "|") != 0)//
 			tail++;
 		command *cmd = (command *)malloc(sizeof(command));
 		cmd->argc = tail - head;
@@ -74,7 +72,7 @@ int shell_execute(char ** args, int argc)
 		}
 		else if(tail < argc - 1){ //not the last command
 			pipe(fd);
-			output_fd = fd[1];
+			output_fd = fd[1];//STDOUT_FILENO;
 			spawn_command(input_fd, output_fd, cmd);
 
 			if(input_fd != 0)//close the input file descriptor
@@ -87,13 +85,12 @@ int shell_execute(char ** args, int argc)
 		free(cmd);
 
 		if (tail >= argc - 1) break;//last command
-		if ((args + tail)[0][0] == '|') head = tail = tail + 1;//skip the '|'
-			else break;
+
+		if ((strcmp(args[tail], "|") == 0))head = ++tail;//skip the '|'
+		else break;
 	}
 
-		pid_t wpid;
-		int status = 0;
-		while ((wpid = wait(&status)) > 0); // wait for all the child processes 
+		while(wait(NULL) > 0);//wait for all the child processes to finish
 		
 		return 0;
 	}
